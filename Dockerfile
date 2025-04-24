@@ -5,6 +5,8 @@ RUN apk add --no-cache build-base protobuf protoc
 RUN gem install proto-convert -v "$PROTO_CONVERT_VERSION"
 
 FROM ruby:3-alpine
+RUN apk add --no-cache protobuf protoc
+
 COPY --from=builder /usr/bin/protoc /usr/bin/protoc
 COPY --from=builder /usr/local/bundle /usr/local/bundle
 
