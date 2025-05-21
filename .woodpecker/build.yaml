@@ -1,0 +1,41 @@
+when:
+  - event: push
+    branch: main
+  - event: pull_request
+  - event: cron
+  - event: manual
+
+matrix:
+  PROTO_CONVERT_VERSION:
+    - 0.4.2
+    - 0.4.1
+    - 0.4.0
+
+steps:
+  - name: SQC Scan
+    image: sonarsource/sonar-scanner-cli
+    when:
+      matrix:
+        PROTO_CONVERT_VERSION: 0.4.2
+    environment:
+      SONAR_TOKEN:
+        from_secret: SONAR_TOKEN
+      SONAR_BRANCH_NAME: ${CI_COMMIT_BRANCH}
+      SONAR_BRANCH_TARGET: ${CI_COMMIT_TARGET_BRANCH}
+
+
+  - name: Docker Buildx
+    image: woodpeckerci/plugin-docker-buildx
+    when:
+      - event: [push, cron, manual]
+        branch: main
+    settings:
+      repo: djipy/proto-convert
+      dockerfile: Dockerfile
+      platforms: linux/amd64,linux/arm64
+      tag: ${PROTO_CONVERT_VERSION}
+      username: "djipy"
+      password:
+        from_secret: DOCKERHUB_TOKEN
+      build_args:
+        PROTO_CONVERT_VERSION: ${PROTO_CONVERT_VERSION}
